@@ -1,0 +1,29 @@
+﻿<Application x:Class="Reolmarked.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Reolmarked"
+             StartupUri="View/MainWindow.xaml">
+    <Application.Resources>
+        <!-- Standard-knap -->
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Background" Value="#2196F3"/>
+            <!-- Standard blå -->
+        </Style>
+
+        <!-- Grøn knap (Tilføj) -->
+        <Style x:Key="AddButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#4CAF50"/>
+        </Style>
+
+        <!-- Rød knap (Slet) -->
+        <Style x:Key="DeleteButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="#F44336"/>
+        </Style>
+    </Application.Resources>
+
+</Application>

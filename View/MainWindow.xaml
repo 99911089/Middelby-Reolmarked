@@ -1,0 +1,59 @@
+﻿<Window x:Class="Reolmarked.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Reolmarked" Height="500" Width="1400"
+        Background="LightBlue">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ListView for Customers -->
+        <ListView x:Name="CustomerListView" Grid.Row="0" Margin="0,0,0,10" Background="White">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding CustomerId}" />
+                    <GridViewColumn Header="Name" Width="150" DisplayMemberBinding="{Binding CustomerName}" />
+                    <GridViewColumn Header="Email" Width="200" DisplayMemberBinding="{Binding CustomerEmail}" />
+                    <GridViewColumn Header="Phone" Width="100" DisplayMemberBinding="{Binding CustomerPhone}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <!-- ListView for Racks -->
+        <ListView x:Name="RackListView" Grid.Row="1" Margin="0,0,0,10" Background="White">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding RackId}" />
+                    <GridViewColumn Header="Shelves" Width="100" DisplayMemberBinding="{Binding AmountShelves}" />
+                    <GridViewColumn Header="Bøjlestang" Width="120" DisplayMemberBinding="{Binding HangerBarText}" />
+                    <GridViewColumn Header="Occupied" Width="100" DisplayMemberBinding="{Binding IsOccupied}" />
+                    <GridViewColumn Header="Product" Width="150" DisplayMemberBinding="{Binding ProductName}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <!-- WrapPanel for Buttons -->
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,10,0,0">
+            <Button Content="Tilføj lejer" Margin="5" Click="ManageCustomer_Click" Background="DarkBlue" Foreground="White"/>
+            <Button Content="Rediger Lejer" Margin="5" Click="EditCustomer_Click" Background="DarkGreen" Foreground="White"/>
+            <Button Content="Slet Lejer" Margin="5" Click="DeleteCustomer_Click" Background="Red" Foreground="White"/>
+            <Button Content="Vis ledige reoler" Margin="5" Click="ShowAvailable_Click" Background="Orange" Foreground="Black"/>
+            <Button Content="Vis optaget reoler" Margin="5" Click="ShowOccupied_Click" Background="Gray" Foreground="White"/>
+            <Button Content="Vis lejede reoler" Margin="5" Click="SellButton_Click" Background="DarkCyan" Foreground="White"/>
+            <Button Content="Vælg optaget reol" Margin="5" Click="SelectOccupiedRack_Click" Background="DarkOrange" Foreground="White"/>
+            <Button Content="Vis alle reoler" Margin="5" Click="ShowAll_Click" Background="Purple" Foreground="White"/>
+            <Button Content="Vis bøjler" Margin="5" Click="ShowAllRack_Click" Background="DarkCyan" Foreground="White"/>
+            <Button Content="Sælge produkt" Margin="5" Click="SellButton_Click" Background="DarkCyan" Foreground="White"/>
+            <Button Content="Betaling" Margin="5" Click="Payment_Click" Background="Orange" Foreground="Black"/>
+            <ComboBox x:Name="PaymentMethodComboBox" Width="120" Margin="5">
+                <ComboBoxItem Content="Kort"/>
+                <ComboBoxItem Content="Kontant"/>
+                <ComboBoxItem Content="MobilePay"/>
+            </ComboBox>
+        </WrapPanel>
+    </Grid>
+</Window>

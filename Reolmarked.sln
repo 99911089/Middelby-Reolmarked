@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reolmarked", "Reolmarked.csproj", "{5C6409BE-BFE9-4AD9-B954-910EAF14CB3F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6E848DBE-E877-4C65-8B32-D9FDC938F2FE} = {6E848DBE-E877-4C65-8B32-D9FDC938F2FE}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reolmarked.Tests", "..\Reolmarked.Tests\Reolmarked.Tests.csproj", "{6E848DBE-E877-4C65-8B32-D9FDC938F2FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C6409BE-BFE9-4AD9-B954-910EAF14CB3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C6409BE-BFE9-4AD9-B954-910EAF14CB3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C6409BE-BFE9-4AD9-B954-910EAF14CB3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C6409BE-BFE9-4AD9-B954-910EAF14CB3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E848DBE-E877-4C65-8B32-D9FDC938F2FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E848DBE-E877-4C65-8B32-D9FDC938F2FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E848DBE-E877-4C65-8B32-D9FDC938F2FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E848DBE-E877-4C65-8B32-D9FDC938F2FE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FD0376C7-BB1F-4EF9-9986-F8831F27FF2E}
+	EndGlobalSection
+EndGlobal
