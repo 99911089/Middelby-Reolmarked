@@ -29,6 +29,8 @@
             <Button Content="Tilføj lejer" Margin="5" Click="AddTenant_Click"/>
             <Button Content="Rediger lejer" Margin="5" Click="EditTenant_Click"/>
             <Button Content="Slet lejer" Margin="5" Click="DeleteTenant_Click"/>
+            <Button Content="Produkter" Click="OpenProducts_Click" Width="120" Margin="5,0"/>
+
         </StackPanel>
     </Grid>
 </Window>

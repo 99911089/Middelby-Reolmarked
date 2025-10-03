@@ -31,73 +31,61 @@ namespace Reolmarked.Repository.DbRepo
         // Sikrer at databasen "ReolmarkedDB" findes, ellers oprettes den
         private void EnsureDatabaseExists()
         {
-            SqlConnection conn = null;
-            SqlCommand cmd = null;
-
             try
             {
-                conn = new SqlConnection(_serverConnectionString); // Forbindelse til master-databasen
-                conn.Open();
+                using (var conn = new SqlConnection(_serverConnectionString)) // Forbindelse til master-databasen
+                {
+                    conn.Open();
 
-                string sql = @"
-                    IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ReolmarkedDB')
-                    BEGIN
-                        CREATE DATABASE ReolmarkedDB;
-                    END";
+                    string sql = @"
+                        IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ReolmarkedDB')
+                        BEGIN
+                            CREATE DATABASE ReolmarkedDB;
+                        END";
 
-                cmd = new SqlCommand(sql, conn);
-                cmd.ExecuteNonQuery(); // Kører SQL-scriptet
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.ExecuteNonQuery(); // Kører SQL-scriptet
+                    }
+                }
                 LatestStatus = "Database tjekket/oprettet.";
             }
             catch (Exception ex)
             {
                 LatestStatus = "Fejl ved databasekontrol: " + ex.Message;
             }
-            finally
-            {
-                if (cmd != null)
-                    cmd.Dispose();
-                if (conn != null)
-                    conn.Close();
-            }
         }
 
         // Sikrer at tabellen CUSTOMER findes, ellers oprettes den
         private void EnsureTableExists()
         {
-            SqlConnection conn = null;
-            SqlCommand cmd = null;
-
             try
             {
-                conn = new SqlConnection(_cs); // Forbindelse til ReolmarkedDB
-                conn.Open();
+                using (var conn = new SqlConnection(_cs)) // Forbindelse til ReolmarkedDB
+                {
+                    conn.Open();
 
-                string sql = @"
-                    IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='CUSTOMER' AND xtype='U')
-                    BEGIN
-                        CREATE TABLE CUSTOMER (
-                            CustomerId INT IDENTITY(1,1) PRIMARY KEY,
-                            CustomerName NVARCHAR(100) NOT NULL,
-                            CustomerEmail NVARCHAR(100) NOT NULL,
-                            CustomerPhone NVARCHAR(50) NULL
-                        );
-                    END";
+                    string sql = @"
+                        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name='CUSTOMER')
+                        BEGIN
+                            CREATE TABLE CUSTOMER (
+                                CustomerId INT IDENTITY(1,1) PRIMARY KEY,
+                                CustomerName NVARCHAR(100) NOT NULL,
+                                CustomerEmail NVARCHAR(100) NOT NULL,
+                                CustomerPhone NVARCHAR(50) NULL
+                            );
+                        END";
 
-                cmd = new SqlCommand(sql, conn);
-                cmd.ExecuteNonQuery(); // Kører SQL-scriptet
-                LatestStatus = "Tabel tjekket/oprettet.";
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.ExecuteNonQuery(); // Kører SQL-scriptet
+                    }
+                }
+                LatestStatus = "CUSTOMER-tabel tjekket/oprettet.";
             }
             catch (Exception ex)
             {
                 LatestStatus = "Fejl ved tabelkontrol: " + ex.Message;
-            }
-            finally
-            {
-                if (cmd != null)
-                    cmd.Dispose();
-                if (conn != null)
-                    conn.Close();
             }
         }
 

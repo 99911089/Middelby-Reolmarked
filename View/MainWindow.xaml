@@ -1,59 +1,205 @@
 ﻿<Window x:Class="Reolmarked.View.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Reolmarked" Height="500" Width="1400"
-        Background="LightBlue">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Reolmarked"
+        Height="700"
+        Width="950"
+        Background="LightSteelBlue">
 
+    <!-- ======================= STYLES ======================= -->
+    <Window.Resources>
+        <!-- Knapper -->
+        <Style TargetType="Button">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="LightGray"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="Margin" Value="2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="DodgerBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="DarkBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Menu -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="DodgerBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- ListView Items -->
+        <Style TargetType="ListViewItem">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Style.Triggers>
+                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#F0F0F0"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="SteelBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="LightSkyBlue"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <!-- ======================= LAYOUT ======================= -->
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="2*"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <!-- Menu -->
+            <RowDefinition Height="5"/>
+            <!-- Separator -->
+            <RowDefinition Height="*"/>
+            <!-- Indhold -->
+            <RowDefinition Height="Auto"/>
+            <!-- Sælg -->
+            <RowDefinition Height="*"/>
+            <!-- Salgshistorik -->
+            <RowDefinition Height="5"/>
+            <!-- Separator -->
+            <RowDefinition Height="Auto"/>
+            <!-- Footer -->
         </Grid.RowDefinitions>
 
-        <!-- ListView for Customers -->
-        <ListView x:Name="CustomerListView" Grid.Row="0" Margin="0,0,0,10" Background="White">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding CustomerId}" />
-                    <GridViewColumn Header="Name" Width="150" DisplayMemberBinding="{Binding CustomerName}" />
-                    <GridViewColumn Header="Email" Width="200" DisplayMemberBinding="{Binding CustomerEmail}" />
-                    <GridViewColumn Header="Phone" Width="100" DisplayMemberBinding="{Binding CustomerPhone}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <!-- ======================= TOPMENU ======================= -->
+        <Menu Grid.Row="0" Background="DarkSlateBlue" Foreground="White">
+            <MenuItem Header="Kunder">
+                <MenuItem Header="Tilføj" Click="AddCustomer_Click"/>
+                <MenuItem Header="Rediger" Click="EditCustomer_Click"/>
+                <MenuItem Header="Slet" Click="DeleteCustomer_Click"/>
+            </MenuItem>
 
-        <!-- ListView for Racks -->
-        <ListView x:Name="RackListView" Grid.Row="1" Margin="0,0,0,10" Background="White">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding RackId}" />
-                    <GridViewColumn Header="Shelves" Width="100" DisplayMemberBinding="{Binding AmountShelves}" />
-                    <GridViewColumn Header="Bøjlestang" Width="120" DisplayMemberBinding="{Binding HangerBarText}" />
-                    <GridViewColumn Header="Occupied" Width="100" DisplayMemberBinding="{Binding IsOccupied}" />
-                    <GridViewColumn Header="Product" Width="150" DisplayMemberBinding="{Binding ProductName}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+            <MenuItem Header="Reoler">
+                <MenuItem Header="Vis ledige" Click="ShowAvailable_Click"/>
+                <MenuItem Header="Vis optaget" Click="ShowOccupied_Click"/>
+                <MenuItem Header="Vis alle" Click="ShowAll_Click"/>
+                <Separator/>
+                <MenuItem Header="➕ Tilføj reol" Click="AddRack_Click"/>
+                <MenuItem Header="🔄 Skift status" Click="ToggleRackStatus_Click"/>
+            </MenuItem>
 
-        <!-- WrapPanel for Buttons -->
-        <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,10,0,0">
-            <Button Content="Tilføj lejer" Margin="5" Click="ManageCustomer_Click" Background="DarkBlue" Foreground="White"/>
-            <Button Content="Rediger Lejer" Margin="5" Click="EditCustomer_Click" Background="DarkGreen" Foreground="White"/>
-            <Button Content="Slet Lejer" Margin="5" Click="DeleteCustomer_Click" Background="Red" Foreground="White"/>
-            <Button Content="Vis ledige reoler" Margin="5" Click="ShowAvailable_Click" Background="Orange" Foreground="Black"/>
-            <Button Content="Vis optaget reoler" Margin="5" Click="ShowOccupied_Click" Background="Gray" Foreground="White"/>
-            <Button Content="Vis lejede reoler" Margin="5" Click="SellButton_Click" Background="DarkCyan" Foreground="White"/>
-            <Button Content="Vælg optaget reol" Margin="5" Click="SelectOccupiedRack_Click" Background="DarkOrange" Foreground="White"/>
-            <Button Content="Vis alle reoler" Margin="5" Click="ShowAll_Click" Background="Purple" Foreground="White"/>
-            <Button Content="Vis bøjler" Margin="5" Click="ShowAllRack_Click" Background="DarkCyan" Foreground="White"/>
-            <Button Content="Sælge produkt" Margin="5" Click="SellButton_Click" Background="DarkCyan" Foreground="White"/>
-            <Button Content="Betaling" Margin="5" Click="Payment_Click" Background="Orange" Foreground="Black"/>
-            <ComboBox x:Name="PaymentMethodComboBox" Width="120" Margin="5">
-                <ComboBoxItem Content="Kort"/>
-                <ComboBoxItem Content="Kontant"/>
-                <ComboBoxItem Content="MobilePay"/>
-            </ComboBox>
-        </WrapPanel>
+            <MenuItem Header="Produkt">
+                <MenuItem Header="Sælg produkt" Click="SellButton_Click"/>
+                <MenuItem Header="Administrer produkter" Click="OpenProductWindow_Click"/>
+            </MenuItem>
+
+            <MenuItem Header="Betaling">
+                <MenuItem Header="Kort" Tag="Kort" Click="Payment_Click"/>
+                <MenuItem Header="Kontant" Tag="Kontant" Click="Payment_Click"/>
+                <MenuItem Header="MobilePay" Tag="MobilePay" Click="Payment_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Separator -->
+        <Border Grid.Row="1" Height="2" Background="Gray" Margin="0,2"/>
+
+        <!-- ======================= INNHOLD (KUNDER / REOLER) ======================= -->
+        <Grid Grid.Row="2" Margin="0,10,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Kunder -->
+            <Border Grid.Column="0" Background="WhiteSmoke" CornerRadius="8" Padding="10" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Kunder"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="DarkBlue"
+                               Margin="0,0,0,10"/>
+                    <ListView x:Name="CustomerListView"
+                              ItemsSource="{Binding Customers}"
+                              Height="250"
+                              AlternationCount="2"
+                              DisplayMemberPath="CustomerName"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Reoler -->
+            <Border Grid.Column="1" Background="WhiteSmoke" CornerRadius="8" Padding="10" Margin="5">
+                <StackPanel>
+                    <TextBlock Text="Reoler"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="DarkGreen"
+                               Margin="0,0,0,10"/>
+
+                    <!-- Liste med reoler -->
+                    <ListView x:Name="RackListView"
+                              Height="250"
+                              AlternationCount="2">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding RackId}" />
+                                <GridViewColumn Header="Navn" Width="150" DisplayMemberBinding="{Binding RackName}" />
+                                <GridViewColumn Header="Status" Width="100" DisplayMemberBinding="{Binding Status}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <!-- Knapper under reoler -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <Button Content="➕ Tilføj reol" Width="120" Margin="5" Click="AddRack_Click"/>
+                        <Button Content="🔄 Skift status" Width="120" Margin="5" Click="ToggleRackStatus_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ======================= SÆLG PRODUKT ======================= -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
+            <TextBlock Text="Indtast/scan stregkode:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="SellBarcodeTextBox" Width="200" Margin="0,0,10,0"/>
+            <Button Content="Sælg" Width="100" Background="LightCoral" Click="SellButton_Click"/>
+        </StackPanel>
+
+        <!-- ======================= SALGSHISTORIK ======================= -->
+        <Border Grid.Row="4" Background="WhiteSmoke" CornerRadius="8" Padding="10" Margin="5">
+            <StackPanel>
+                <TextBlock Text="Salgshistorik"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="DarkRed"
+                           Margin="0,0,0,10"/>
+                <ListView x:Name="SalesHistoryListView" Height="150" AlternationCount="2">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Navn" Width="150" DisplayMemberBinding="{Binding ProductName}" />
+                            <GridViewColumn Header="Pris" Width="100" DisplayMemberBinding="{Binding Price}" />
+                            <GridViewColumn Header="Stregkode" Width="120" DisplayMemberBinding="{Binding Barcode}" />
+                            <GridViewColumn Header="Solgt" Width="150" DisplayMemberBinding="{Binding SoldDate}" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </StackPanel>
+        </Border>
+
+        <!-- ======================= FOOTER ======================= -->
+        <TextBlock Grid.Row="6"
+                   Text="Reolmarked 2025"
+                   HorizontalAlignment="Center"
+                   Foreground="Gray"
+                   Margin="0,5"/>
     </Grid>
 </Window>
