@@ -2,8 +2,11 @@
 
 namespace Reolmarked.Model
 {
+    // Klassen repræsenterer en kunde i systemet
+    // Den implementerer INotifyPropertyChanged, så ændringer kan ses i UI
     public class Customer : INotifyPropertyChanged
     {
+        // Felter til at gemme data internt
         private int _customerId;
         private string _customerName;
         private string _customerEmail;
@@ -12,7 +15,7 @@ namespace Reolmarked.Model
         // Tom konstruktør
         public Customer() { }
 
-        // Konstruktør med parametre
+        // Konstruktør til at oprette ny kunde uden id
         public Customer(string name, string email, string phone)
         {
             _customerName = name;
@@ -20,73 +23,87 @@ namespace Reolmarked.Model
             _customerPhone = phone;
         }
 
-        // Id
+        // Konstruktør til kunde med id
+        public Customer(int id, string name, string email, string phone)
+        {
+            _customerId = id;
+            _customerName = name;
+            _customerEmail = email;
+            _customerPhone = phone;
+        }
+
+        // KundeId – unikt nummer
         public int CustomerId
         {
-            get => _customerId;
+            get { return _customerId; }
             set
             {
                 if (_customerId != value)
                 {
                     _customerId = value;
-                    OnPropertyChanged(nameof(CustomerId));
+                    OnPropertyChanged("CustomerId");
                 }
             }
         }
 
-        // Navn
+        // Kundens navn
         public string CustomerName
         {
-            get => _customerName;
+            get { return _customerName; }
             set
             {
                 if (_customerName != value)
                 {
                     _customerName = value;
-                    OnPropertyChanged(nameof(CustomerName));
+                    OnPropertyChanged("CustomerName");
                 }
             }
         }
 
-        // Email
+        // Kundens email
         public string CustomerEmail
         {
-            get => _customerEmail;
+            get { return _customerEmail; }
             set
             {
                 if (_customerEmail != value)
                 {
                     _customerEmail = value;
-                    OnPropertyChanged(nameof(CustomerEmail));
+                    OnPropertyChanged("CustomerEmail");
                 }
             }
         }
 
-        // Telefon
+        // Kundens telefonnummer
         public string CustomerPhone
         {
-            get => _customerPhone;
+            get { return _customerPhone; }
             set
             {
                 if (_customerPhone != value)
                 {
                     _customerPhone = value;
-                    OnPropertyChanged(nameof(CustomerPhone));
+                    OnPropertyChanged("CustomerPhone");
                 }
             }
         }
 
-        // ToString til visning
+        // ToString bruges til at vise kunden i en ListBox
         public override string ToString()
         {
-            return $"{CustomerName} - {CustomerEmail} - {CustomerPhone}";
+            return CustomerName + " (" + CustomerEmail + ", " + CustomerPhone + ")";
         }
 
-        // INotifyPropertyChanged
+        // Event til INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
+
+        // Hjælpe-metode til at sende besked om ændringer til UI
+        protected void OnPropertyChanged(string propertyName)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
     }
 }

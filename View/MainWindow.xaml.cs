@@ -1,280 +1,245 @@
-﻿using Reolmarked.Model;
-using Reolmarked.Repository.DbRepo;
-using Reolmarked.Repository.IRepo;
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
+﻿using Reolmarked.Model;                  // Indeholder Customer, Rack, Sale klasser
+using Reolmarked.Model.Reolmarked.Model;
+using System;                            // Til DateTime
+using System.Collections.ObjectModel;    // Til ObservableCollection
+using System.IO;                         // Til MemoryStream
+using System.Linq;                       // Til Where (filtrering af lister)
+using System.Windows;                    // Til Window, MessageBox osv.
+using System.Windows.Controls;           // Til MenuItem
+using System.Windows.Media.Imaging;      // Til BitmapImage
+using ZXing;                             // Til stregkode
+using ZXing.Common;                      // Til EncodingOptions
 
 namespace Reolmarked.View
 {
-    // MainWindow håndterer både reoler og kunder (lejere)
     public partial class MainWindow : Window
     {
-        private RackMarket market;           // Håndterer alle reoler
-        private List<Customer> _customers;   // Liste over kunder/lejere
-        private ICustomerRepository _repo;   // Repository til databaseoperationer
-        private List<Rack> racks = new List<Rack>(); // Liste med reoler
+        // ========================== FELTER OG LISTE-BINDING ==========================
+
+        private int _nextRackId;   // Holder styr på næste ledige reol-ID
+
+        public ObservableCollection<Customer> Customers { get; set; }     // Kunde-liste
+        public ObservableCollection<Rack> Racks { get; set; }             // Reol-liste
+        public ObservableCollection<Sale> SalesHistory { get; set; }      // Salgshistorik-liste
+
+        // ========================== KONSTRUKTØR ==========================
 
         public MainWindow()
         {
-            InitializeComponent(); // Dansk kommentar: linker XAML til code-behind
+            InitializeComponent();
 
-            // Initialiser repository med databaseforbindelse
-            _repo = new DbCustomerRepository(new Database().GetConnectionString());
+            // Initialiser collections
+            Customers = new ObservableCollection<Customer>();
+            Racks = new ObservableCollection<Rack>();
+            SalesHistory = new ObservableCollection<Sale>();
 
-            LoadCustomers(); // Hent og vis alle kunder fra databasen
+            // Bind collections til UI
+            CustomerListView.ItemsSource = Customers;
+            RackListView.ItemsSource = Racks;
+            SalesHistoryListView.ItemsSource = SalesHistory;
 
-            // Initialiser RackMarket (samling af alle reoler)
-            market = new RackMarket();
+            // Tilføj lidt testdata
+            Customers.Add(new Customer("Anders And", "anders@andeby.dk", "12345678"));
+            Racks.Add(new Rack { RackId = 1, RackName = "Reol A", IsAvailable = true });
+            SalesHistory.Add(new Sale { ProductName = "Cola", Price = 15, Barcode = "1234567890123", SoldDate = DateTime.Now });
 
-            // Tilføj 43 reoler med standardværdier
-            for (int i = 1; i <= 43; i++)
+            // Næste ledige ID til nye reoler
+            _nextRackId = 2;
+        }
+
+        // ========================== KUNDER ==========================
+
+        // Tilføj ny kunde
+        private void AddCustomer_Click(object sender, RoutedEventArgs e)
+        {
+            CustomerInputWindow win = new CustomerInputWindow();
+            if (win.ShowDialog() == true)
             {
-                market.Racks.Add(new Rack
-                {
-                    RackId = i,           // unik ID for hver reol
-                    AmountShelves = 5,    // antal hylder pr. reol
-                    HangerBar = true,     // reolen har stang
-                    IsOccupied = false,   // reolen er ledig som standard
-                    ProductName = ""      // ingen produkt endnu
-                });
+                Customers.Add(win.Customer);
             }
-
-            // Eksempeldata (kan være du henter fra fil eller database)
-            racks.Add(new Rack { RackId = 1, AmountShelves = 4, HangerBar = true, IsOccupied = true, ProductName = "Jakke" });
-            racks.Add(new Rack { RackId = 2, AmountShelves = 3, HangerBar = false, IsOccupied = false, ProductName = "" });
-            racks.Add(new Rack { RackId = 3, AmountShelves = 5, HangerBar = true, IsOccupied = false, ProductName = "" });
-
-            // Når programmet starter, vis alle racks
-            RackListView.ItemsSource = racks;
-        }
-
-        // ------------------ Reol-knapper ------------------
-
-        // Vis alle reoler som er optaget (IsOccupied = true)
-        private void ShowRented_Click(object sender, RoutedEventArgs e)
-        {
-            List<Rack> rentedRacks = new List<Rack>();
-
-            foreach (Rack r in racks)
-            {
-                if (r.IsOccupied)
-                {
-                    rentedRacks.Add(r);
-                }
-            }
-
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = rentedRacks;
-        }
-
-        // Vis alle reoler som har bøjlestang (HangerBar = true)
-        // Vis alle reoler som har bøjlestang (HangerBar = true)
-        private void ShowHangers_Click(object sender, RoutedEventArgs e)
-        {
-            List<string> hangerRacksText = new List<string>();
-
-            foreach (Rack r in racks)
-            {
-                if (r.HangerBar)
-                {
-                    hangerRacksText.Add(r.ToHangerString()); // Brug speciel tekst
-                }
-            }
-
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = hangerRacksText;
-        }
-
-        private void SelectOccupiedRack_Click(object sender, RoutedEventArgs e)
-        {
-            // Liste til optagede reoler
-            List<Rack> occupied = new List<Rack>();
-
-            foreach (Rack r in racks)
-            {
-                if (r.IsOccupied)
-                {
-                    occupied.Add(r);
-                }
-            }
-
-            if (occupied.Count == 0)
-            {
-                MessageBox.Show("Der er ingen optagede reoler.");
-                return;
-            }
-
-            // Vis de optagede reoler i ListView
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = occupied;
-
-            MessageBox.Show("Vælg en reol fra listen ovenfor."); // Guiding tekst
-        }
-
-
-        // Vis alle reoler i racks-listen
-        private void ShowAllRack_Click(object sender, RoutedEventArgs e)
-        {
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = racks;
-        }
-
-        // Opdater ListView med alle reoler i market
-        private void UpdateRackDisplay()
-        {
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = market.Racks;
-        }
-
-        // Vis ledige reoler (uden LINQ)
-        private void ShowAvailable_Click(object sender, RoutedEventArgs e)
-        {
-            List<Rack> available = new List<Rack>();
-
-            foreach (Rack r in market.Racks)
-            {
-                if (!r.IsOccupied)
-                {
-                    available.Add(r);
-                }
-            }
-
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = available;
-        }
-
-        // Vis optagede reoler (uden LINQ)
-        private void ShowOccupied_Click(object sender, RoutedEventArgs e)
-        {
-            List<Rack> occupied = new List<Rack>();
-
-            foreach (Rack r in market.Racks)
-            {
-                if (r.IsOccupied)
-                {
-                    occupied.Add(r);
-                }
-            }
-
-            RackListView.ItemsSource = null;
-            RackListView.ItemsSource = occupied;
-        }
-
-        // Vis alle reoler fra market
-        private void ShowAll_Click(object sender, RoutedEventArgs e)
-        {
-            UpdateRackDisplay();
-        }
-
-        // Sælg produkt på valgt reol
-        private void SellButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (RackListView.SelectedItem is Rack selectedRack && selectedRack.IsOccupied)
-            {
-                double commission = market.SellProduct(selectedRack.RackId, 500); // Eksempel: pris 500
-                MessageBox.Show($"Commission: {commission} kr.");
-                UpdateRackDisplay();
-            }
-            else
-            {
-                MessageBox.Show("Select an occupied rack first.");
-            }
-
-        }
-
-        // ------------------ Kunde/Lejer ------------------
-
-        private void LoadCustomers()
-        {
-            _customers = _repo.GetAllCustomers();
-
-            CustomerListView.ItemsSource = null;
-            CustomerListView.ItemsSource = _customers;
-        }
-
-        // Åbn separat vindue til administration af lejere
-        private void ManageCustomer_Click(object sender, RoutedEventArgs e)
-        {
-            CustomerWindow customerWindow = new CustomerWindow();
-            customerWindow.ShowDialog();
-
-            LoadCustomers();
         }
 
         // Rediger valgt kunde
         private void EditCustomer_Click(object sender, RoutedEventArgs e)
         {
-            var selectedCustomer = CustomerListView.SelectedItem as Customer;
-
-            if (selectedCustomer != null)
+            if (CustomerListView.SelectedItem is Customer selected)
             {
-                // Åbn EditCustomerWindow med ShowDialog
-                var editWindow = new EditCustomerWindow(_repo, selectedCustomer);
-
-                // Kald ShowDialog én gang og gem resultat
-                bool? result = editWindow.ShowDialog();
-
-                if (result == true)
-                {
-                    LoadCustomers(); // Opdater ListView med nye data
-                }
+                CustomerInputWindow win = new CustomerInputWindow(selected);
+                win.ShowDialog();
             }
             else
             {
-                MessageBox.Show("Vælg en lejer først.");
+                MessageBox.Show("Vælg en kunde først.");
             }
         }
-
 
         // Slet valgt kunde
         private void DeleteCustomer_Click(object sender, RoutedEventArgs e)
         {
-            var selectedCustomer = CustomerListView.SelectedItem as Customer;
-
-            if (selectedCustomer != null)
+            if (CustomerListView.SelectedItem is Customer selected)
             {
-                if (MessageBox.Show("Er du sikker på, du vil slette denne lejer?", "Bekræft", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    _repo.DeleteCustomer(selectedCustomer.CustomerId);
-                    LoadCustomers();
-                }
+                Customers.Remove(selected);
             }
             else
             {
-                MessageBox.Show("Vælg en lejer først.");
+                MessageBox.Show("Vælg en kunde først.");
             }
         }
 
-        // Betalingsfunktion
-        private void Payment_Click(object sender, RoutedEventArgs e)
+        // ========================== REOLER ==========================
+
+        // Vis ledige reoler
+        private void ShowAvailable_Click(object sender, RoutedEventArgs e)
         {
-            if (PaymentMethodComboBox.SelectedItem is ComboBoxItem selectedMethod)
+            RackListView.ItemsSource = new ObservableCollection<Rack>(Racks.Where(r => r.IsAvailable));
+        }
+
+        // Vis optagede reoler
+        private void ShowOccupied_Click(object sender, RoutedEventArgs e)
+        {
+            RackListView.ItemsSource = new ObservableCollection<Rack>(Racks.Where(r => !r.IsAvailable));
+        }
+
+        // Vis alle reoler
+        private void ShowAll_Click(object sender, RoutedEventArgs e)
+        {
+            RackListView.ItemsSource = Racks;
+        }
+
+        // Tilføj en ny reol
+        private void AddRack_Click(object sender, RoutedEventArgs e)
+        {
+            Racks.Add(new Rack
             {
-                string method = selectedMethod.Content.ToString();
+                RackId = _nextRackId,
+                RackName = "Reol " + _nextRackId,
+                IsAvailable = true
+            });
 
-                switch (method)
-                {
-                    case "Kort":
-                        MessageBox.Show("Betaling med kort gennemført!");
-                        break;
+            _nextRackId++; // Forbered næste ID
+        }
 
-                    case "Kontant":
-                        MessageBox.Show("Betaling med kontanter gennemført!");
-                        break;
-
-                    case "MobilePay":
-                        MessageBox.Show("Betaling med MobilePay gennemført!");
-                        break;
-
-                    default:
-                        MessageBox.Show("Vælg venligst en betalingsmetode!");
-                        break;
-                }
+        // Skift status (ledig/optaget) på valgt reol
+        private void ToggleRackStatus_Click(object sender, RoutedEventArgs e)
+        {
+            if (RackListView.SelectedItem is Rack selectedRack)
+            {
+                selectedRack.IsAvailable = !selectedRack.IsAvailable;
+                RackListView.Items.Refresh();
             }
             else
             {
-                MessageBox.Show("Vælg venligst en betalingsmetode!");
+                MessageBox.Show("Vælg en reol i listen først.", "Info",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        // ========================== SALG ==========================
+
+        // Sælg produkt via stregkode
+        private void SellButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(SellBarcodeTextBox.Text))
+            {
+                Sale sale = new Sale
+                {
+                    ProductName = "Ukendt",
+                    Price = 100,
+                    Barcode = SellBarcodeTextBox.Text,
+                    SoldDate = DateTime.Now
+                };
+
+                SalesHistory.Add(sale);
+
+                // Generer stregkode og vis i popup
+                ShowBarcodeWindow(sale.Barcode);
+
+                SellBarcodeTextBox.Clear();
+            }
+            else
+            {
+                MessageBox.Show("Indtast eller scan en stregkode først.");
+            }
+        }
+
+        // Åbn produktvindue
+        private void OpenProductWindow_Click(object sender, RoutedEventArgs e)
+        {
+            ProductInputWindow win = new ProductInputWindow();
+            win.ShowDialog();
+        }
+
+        // Betaling
+        private void Payment_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem item && item.Tag is string metode)
+            {
+                MessageBox.Show("Betaling med: " + metode);
+            }
+        }
+
+        // ========================== STREGKODE ==========================
+
+        private void ShowBarcodeWindow(string barcode)
+        {
+            BitmapImage img = GenerateBarcode(barcode);
+
+            Window win = new Window
+            {
+                Title = "Stregkode: " + barcode,
+                Width = 300,
+                Height = 150,
+                Content = new System.Windows.Controls.Image { Source = img }
+            };
+
+            win.ShowDialog();
+        }
+
+        private BitmapImage GenerateBarcode(string text)
+        {
+            var writer = new BarcodeWriterPixelData
+            {
+                Format = BarcodeFormat.CODE_128,
+                Options = new EncodingOptions
+                {
+                    Height = 80,
+                    Width = 250,
+                    Margin = 2
+                }
+            };
+
+            var pixelData = writer.Write(text);
+
+            using (var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height,
+                System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+            {
+                var bitmapData = bitmap.LockBits(
+                    new System.Drawing.Rectangle(0, 0, pixelData.Width, pixelData.Height),
+                    System.Drawing.Imaging.ImageLockMode.WriteOnly,
+                    System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+
+                try
+                {
+                    System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
+                }
+                finally
+                {
+                    bitmap.UnlockBits(bitmapData);
+                }
+
+                using (var memory = new MemoryStream())
+                {
+                    bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                    memory.Position = 0;
+
+                    BitmapImage bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.StreamSource = memory;
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.EndInit();
+
+                    return bitmapImage;
+                }
             }
         }
     }

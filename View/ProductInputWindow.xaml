@@ -1,0 +1,38 @@
+﻿<Window x:Class="Reolmarked.View.ProductInputWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Produkt" Height="250" Width="400" WindowStartupLocation="CenterOwner">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Navn -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,5">
+            <TextBlock Text="Navn:" Width="100" VerticalAlignment="Center"/>
+            <TextBox x:Name="NameTextBox" Width="200"/>
+        </StackPanel>
+
+        <!-- Pris -->
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,5">
+            <TextBlock Text="Pris:" Width="100" VerticalAlignment="Center"/>
+            <TextBox x:Name="PriceTextBox" Width="200"/>
+        </StackPanel>
+
+        <!-- Stregkode -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,5">
+            <TextBlock Text="Stregkode:" Width="100" VerticalAlignment="Center"/>
+            <TextBox x:Name="BarcodeTextBox" Width="200"/>
+        </StackPanel>
+
+        <!-- Knapper -->
+        <StackPanel Orientation="Horizontal" Grid.Row="3" HorizontalAlignment="Center" Margin="0,10,0,0">
+            <Button Content="OK" Width="100" Margin="5" Click="Ok_Click"/>
+            <Button Content="Annuller" Width="100" Margin="5" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

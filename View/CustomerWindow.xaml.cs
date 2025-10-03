@@ -1,73 +1,101 @@
 ﻿using Reolmarked.Model;
-using Reolmarked.Model.Reolmarked.Model;
+using Reolmarked.Repository.DbRepo;
 using System.Collections.Generic;
 using System.Windows;
 
 namespace Reolmarked.View
 {
-    // Partial class matcher XAML
     public partial class CustomerWindow : Window
     {
-        private List<Tenant> _tenants; // Liste over lejere
+        private DbTenantRepository _repo; // Repository til database
+        private List<Tenant> _tenants;    // Liste af kunder
 
         public CustomerWindow()
         {
-            InitializeComponent(); // VIGTIGT: linker XAML til code-behind
+            InitializeComponent();
 
-            // Eksempellejere
-            _tenants = new List<Tenant>
-            {
-                new Tenant { TenantId = 1, TenantName = "Per Bauer", TenantEmail = "per@example.com", TenantPhone = "12345678" },
-                new Tenant { TenantId = 2, TenantName = "Anna Hansen", TenantEmail = "anna@example.com", TenantPhone = "87654321" }
-            };
+            // Connection string til SQL Server
+            _repo = new DbTenantRepository("Server=Server01;Database=ReolDb;Trusted_Connection=True;TrustServerCertificate=True;");
 
-            UpdateTenantDisplay(); // Opdater ListView
+            // Hent kunder fra databasen når vinduet åbnes
+            LoadTenants();
         }
 
-        // Opdater ListView med alle lejere
-        private void UpdateTenantDisplay()
+        // Hent kunder fra DB og vis i ListView
+        private void LoadTenants()
         {
-            TenantListView.ItemsSource = null;      // Fjern gammel binding
-            TenantListView.ItemsSource = _tenants;  // Bind ny liste
+            _tenants = _repo.GetAllTenants();
+            TenantListView.ItemsSource = null;  // Fjern gammel binding
+            TenantListView.ItemsSource = _tenants; // Sæt ny
         }
 
-        // Tilføj ny lejer
+        // Tilføj ny kunde
         private void AddTenant_Click(object sender, RoutedEventArgs e)
         {
-            int newId = _tenants.Count + 1;  // Tildel nyt ID
-            _tenants.Add(new Tenant { TenantId = newId, TenantName = "Ny Lejer", TenantEmail = "email@example.com", TenantPhone = "00000000" });
-            UpdateTenantDisplay();            // Opdater ListView
+            // Åbn inputvindue uden data (ny kunde)
+            var input = new TenantInputWindow();
+            if (input.ShowDialog() == true)
+            {
+                _repo.AddTenant(input.Tenant); // Gem i DB
+                LoadTenants(); // Opdater liste
+            }
         }
 
-        // Rediger valgt lejer
+        // Rediger en eksisterende kunde
         private void EditTenant_Click(object sender, RoutedEventArgs e)
         {
             if (TenantListView.SelectedItem is Tenant selectedTenant)
             {
-                selectedTenant.TenantName += " (redigeret)"; // Eksempel: tilføj (redigeret) til navn
-                UpdateTenantDisplay();                        // Opdater ListView
-            }
-            else
-            {
-                MessageBox.Show("Vælg en lejer først.");     // Dansk kommentar
-            }
-        }
-
-        // Slet valgt lejer
-        private void DeleteTenant_Click(object sender, RoutedEventArgs e)
-        {
-            if (TenantListView.SelectedItem is Tenant selectedTenant)
-            {
-                if (MessageBox.Show("Er du sikker på, du vil slette denne lejer?", "Bekræft", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                // Åbn inputvindue med eksisterende kunde
+                var input = new TenantInputWindow(selectedTenant);
+                if (input.ShowDialog() == true)
                 {
-                    _tenants.Remove(selectedTenant);        // Fjern valgt lejer
-                    UpdateTenantDisplay();                  // Opdater ListView
+                    _repo.UpdateTenant(selectedTenant); // Gem ændringer i DB
+                    LoadTenants(); // Opdater liste
                 }
             }
             else
             {
-                MessageBox.Show("Vælg en lejer først.");     // Dansk kommentar
+                MessageBox.Show("Vælg en kunde først.");
             }
         }
+
+        // Slet en kunde
+        private void DeleteTenant_Click(object sender, RoutedEventArgs e)
+        {
+            if (TenantListView.SelectedItem is Tenant selectedTenant)
+            {
+                if (MessageBox.Show("Er du sikker på at du vil slette denne kunde?",
+                                    "Bekræft sletning",
+                                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    _repo.DeleteTenant(selectedTenant.TenantId); // Slet i DB
+                    LoadTenants(); // Opdater liste
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vælg en kunde først.");
+            }
+        }
+
+        // Åbn produktvindue for valgt kunde
+        private void OpenProducts_Click(object sender, RoutedEventArgs e)
+        {
+            if (TenantListView.SelectedItem is Tenant selectedTenant)
+            {
+                // Opret et nyt vindue til at vise/redigere produkter
+                var productWindow = new ProductWindow(selectedTenant);
+
+                // Åbn som dialog (blokerer indtil man lukker vinduet)
+                productWindow.Owner = this;
+                productWindow.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Vælg en lejer først, før du kan se produkter.");
+            }
+        }
+
     }
 }

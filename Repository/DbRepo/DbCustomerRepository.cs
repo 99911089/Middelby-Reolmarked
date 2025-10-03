@@ -1,145 +1,111 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
+using System.Configuration;
+using Microsoft.Data.SqlClient; // Husk denne nuget: Microsoft.Data.SqlClient
 using Reolmarked.Model;
 using Reolmarked.Repository.IRepo;
 
 namespace Reolmarked.Repository.DbRepo
 {
+    /// <summary>
+    /// Database-repository for Customers (CRUD).
+    /// </summary>
     public class DbCustomerRepository : ICustomerRepository
     {
-        private readonly string _connectionString; // Gemmer database connection string
+        private readonly string _connectionString;
 
-        public string connectionString { get; private set; }
-
-        // Konstruktør med connection string
-        public DbCustomerRepository(string connectionString)
+        public DbCustomerRepository()
         {
-            _connectionString = connectionString;
+            // Hent connection string fra App.config
+            var cs = ConfigurationManager.ConnectionStrings["ReolmarkedDb"];
+            if (cs == null)
+                throw new InvalidOperationException("Connection string 'ReolmarkedDb' mangler i App.config!");
+            _connectionString = cs.ConnectionString;
         }
 
-        // Opret ny kunde
-        public void CreateCustomer(Customer customer)
-        {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                string sql = "INSERT INTO Customers (CustomerName, CustomerEmail, CustomerPhone) VALUES (@name, @email, @phone)";
-                SqlCommand command = new SqlCommand(sql, connection);
-
-                command.Parameters.AddWithValue("@name", customer.CustomerName);
-                command.Parameters.AddWithValue("@email", customer.CustomerEmail);
-                command.Parameters.AddWithValue("@phone", customer.CustomerPhone);
-
-                command.ExecuteNonQuery();
-            }
-        }
-
-        // Hent alle kunder
+        /// <summary>
+        /// Henter alle kunder fra databasen
+        /// </summary>
         public List<Customer> GetAllCustomers()
         {
             var customers = new List<Customer>();
 
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = new SqlCommand(
+                "SELECT CustomerId, CustomerName, CustomerEmail, CustomerPhone FROM Customers", conn))
             {
-                connection.Open();
-
-                string sql = "SELECT CustomerId, CustomerName, CustomerEmail, CustomerPhone FROM Customer";
-                SqlCommand command = new SqlCommand(sql, connection);
-
-                using (SqlDataReader reader = command.ExecuteReader())
+                conn.Open();
+                using (var rdr = cmd.ExecuteReader())
                 {
-                    while (reader.Read())
+                    while (rdr.Read())
                     {
                         customers.Add(new Customer
                         {
-                            CustomerId = reader.GetInt32(0),
-                            CustomerName = reader.GetString(1),
-                            CustomerEmail = reader.GetString(2),
-                            CustomerPhone = reader.GetString(3)
+                            CustomerId = rdr.GetInt32(0),
+                            CustomerName = rdr.GetString(1),
+                            CustomerEmail = rdr.IsDBNull(2) ? null : rdr.GetString(2),
+                            CustomerPhone = rdr.IsDBNull(3) ? null : rdr.GetString(3)
                         });
                     }
                 }
             }
-
             return customers;
         }
 
-
-
-        // Hent kunde efter ID
-        public Customer GetById(int customerId)
+        /// <summary>
+        /// Tilføjer en ny kunde
+        /// </summary>
+        public void AddCustomer(Customer newCustomer)
         {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = new SqlCommand(
+                "INSERT INTO Customers (CustomerName, CustomerEmail, CustomerPhone) VALUES (@CustomerName, @CustomerEmail, @CustomerPhone)", conn))
             {
-                connection.Open();
+                cmd.Parameters.AddWithValue("@CustomerName", newCustomer.CustomerName);
+                cmd.Parameters.AddWithValue("@CustomerEmail", (object?)newCustomer.CustomerEmail ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@CustomerPhone", (object?)newCustomer.CustomerPhone ?? DBNull.Value);
 
-                string sql = "SELECT CustomerId, CustomerName, CustomerEmail, CustomerPhone FROM Customers WHERE CustomerId = @id";
-                SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@id", customerId);
-
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        return new Customer
-                        {
-                            CustomerId = reader.GetInt32(0),
-                            CustomerName = reader.GetString(1),
-                            CustomerEmail = reader.GetString(2),
-                            CustomerPhone = reader.GetString(3)
-                        };
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
+                conn.Open();
+                cmd.ExecuteNonQuery();
             }
         }
 
-        // Opdater kunde
+        /// <summary>
+        /// Opdaterer en eksisterende kunde
+        /// </summary>
         public void UpdateCustomer(Customer customer)
         {
-            // Husk at ændre "Customers" til dit tabelnavn i databasen
-            string sql = @"
-        UPDATE Customers
-        SET Name = @Name,
-            Email = @Email,
-            PhoneNumber = @Phone
-        WHERE CustomerId = @Id";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = new SqlCommand(
+                "UPDATE Customers SET CustomerName=@CustomerName, CustomerEmail=@CustomerEmail, CustomerPhone=@CustomerPhone WHERE CustomerId=@CustomerId", conn))
             {
-                using (SqlCommand command = new SqlCommand(sql, connection))
-                {
-                    // Bind parametre
-                    command.Parameters.AddWithValue("@Name", customer.CustomerName);
-                    command.Parameters.AddWithValue("@Email", customer.CustomerEmail);
-                    command.Parameters.AddWithValue("@Phone", customer.CustomerPhone);
-                    command.Parameters.AddWithValue("@Id", customer.CustomerId);
+                cmd.Parameters.AddWithValue("@CustomerId", customer.CustomerId);
+                cmd.Parameters.AddWithValue("@CustomerName", customer.CustomerName);
+                cmd.Parameters.AddWithValue("@CustomerEmail", (object?)customer.CustomerEmail ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@CustomerPhone", (object?)customer.CustomerPhone ?? DBNull.Value);
 
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                }
+                conn.Open();
+                cmd.ExecuteNonQuery();
             }
         }
 
-
-        // Slet kunde
+        /// <summary>
+        /// Sletter en kunde ud fra ID
+        /// </summary>
         public void DeleteCustomer(int customerId)
         {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (var conn = new SqlConnection(_connectionString))
+            using (var cmd = new SqlCommand("DELETE FROM Customers WHERE CustomerId=@CustomerId", conn))
             {
-                connection.Open();
-
-                string sql = "DELETE FROM Customers WHERE CustomerId = @id";
-                SqlCommand command = new SqlCommand(sql, connection);
-                command.Parameters.AddWithValue("@id", customerId);
-
-                command.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@CustomerId", customerId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
             }
+        }
+
+        public void CreateCustomer(Customer customer)
+        {
+            throw new NotImplementedException();
         }
     }
 }

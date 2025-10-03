@@ -1,49 +1,61 @@
 ﻿using System.ComponentModel;   // Indeholder INotifyPropertyChanged interfacet
 
-namespace Reolmarked.Model      // Namespace matcher projektets navn
+namespace Reolmarked.Model      // Sørg for at namespace passer til dit projekt
 {
     // Repræsenterer en status for en lejeaftale (fx "Aktiv", "Afsluttet", "Annulleret")
-    // Implementerer INotifyPropertyChanged for at understøtte databinding i WPF
+    // Implementerer INotifyPropertyChanged så ændringer kan opdateres i UI
     public class RentalStatus : INotifyPropertyChanged
     {
-        // Private felter til at gemme værdier
-        private int _rentalStatusId;       // Unikt ID for lejestatus
-        private string _rentalStatusName;  // Navn på lejestatus
+        // Privat felt til ID
+        private int _rentalStatusId;
 
-        // Egenskab for RentalStatusId
+        // Privat felt til navn
+        private string _rentalStatusName;
+
+        // Offentlig property for ID
         public int RentalStatusId
         {
-            get { return _rentalStatusId; }                     // Returnerer værdien
+            get { return _rentalStatusId; }
             set
             {
-                _rentalStatusId = value;                        // Sætter ny værdi
-                OnPropertyChanged("RentalStatusId");            // Besked til UI om at værdien er ændret
+                if (_rentalStatusId != value)       // Kun hvis værdien ændres
+                {
+                    _rentalStatusId = value;
+                    OnPropertyChanged("RentalStatusId"); // Giv besked til UI
+                }
             }
         }
 
-        // Egenskab for RentalStatusName
+        // Offentlig property for navn
         public string RentalStatusName
         {
             get { return _rentalStatusName; }
             set
             {
-                _rentalStatusName = value;
-                OnPropertyChanged("RentalStatusName");
+                if (_rentalStatusName != value)
+                {
+                    _rentalStatusName = value;
+                    OnPropertyChanged("RentalStatusName"); // Giv besked til UI
+                }
             }
         }
 
-        // Event som UI kan "lytte på" og reagere når en property ændres
+        // Event som UI kan "lytte" på
         public event PropertyChangedEventHandler PropertyChanged;
 
-        // Metode til at rejse PropertyChanged eventen manuelt
+        // Hjælpe-metode til at fyre eventen af
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)   // Tjekker at der er abonnenter
+            if (PropertyChanged != null)
             {
-                // Sender besked til UI: "property X er ændret"
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
+        // ToString – så den vises pænt i fx en ListBox
+        public override string ToString()
+        {
+            return $"{RentalStatusName}";
+        }
     }
 }
-

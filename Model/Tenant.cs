@@ -1,21 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Reolmarked.Model
+﻿namespace Reolmarked.Model
 {
-    namespace Reolmarked.Model
+    // Klassen repræsenterer en kunde/lejer (Tenant)
+    public class Tenant
     {
-        // Tenant class repræsenterer en lejer
-        public class Tenant
+        // Primærnøgle fra databasen
+        public int TenantId { get; set; }
+
+        // Kundens navn
+        public string TenantName { get; set; }
+
+        // Kundens email
+        public string TenantEmail { get; set; }
+
+        // Kundens telefonnummer
+        public string TenantPhone { get; set; }
+
+        // Bruges til visning i ListView mv.
+        public override string ToString()
         {
-            public int TenantId { get; set; }        // Unikt ID for lejer
-            public string TenantName { get; set; }   // Navn på lejer
-            public string TenantEmail { get; set; }  // Email
-            public string TenantPhone { get; set; }  // Telefonnummer
+            return $"{TenantId}: {TenantName} ({TenantEmail}, {TenantPhone})";
         }
     }
-
 }

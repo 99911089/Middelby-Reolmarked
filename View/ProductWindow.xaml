@@ -1,0 +1,61 @@
+﻿<Window x:Class="Reolmarked.View.ProductWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Produkter"
+        Height="500"
+        Width="700"
+        Background="LightGray">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Overskrift -->
+            <RowDefinition Height="*"/>
+            <!-- Liste -->
+            <RowDefinition Height="Auto"/>
+            <!-- Knapper -->
+            <RowDefinition Height="Auto"/>
+            <!-- Stregkode -->
+        </Grid.RowDefinitions>
+
+        <!-- Overskrift -->
+        <TextBlock Text="Produktadministration"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Foreground="DarkBlue"
+                   Margin="0,0,0,10"
+                   Grid.Row="0"/>
+
+        <!-- Produktliste -->
+        <ListView x:Name="ProductListView"
+                  Grid.Row="1"
+                  Height="250"
+                  SelectionChanged="ProductListView_SelectionChanged">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding ProductId}" />
+                    <GridViewColumn Header="Navn" Width="150" DisplayMemberBinding="{Binding ProductName}" />
+                    <GridViewColumn Header="Pris" Width="100" DisplayMemberBinding="{Binding Price}" />
+                    <GridViewColumn Header="Stregkode" Width="120" DisplayMemberBinding="{Binding Barcode}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <!-- Knapper -->
+        <StackPanel Orientation="Horizontal"
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    Margin="0,10,0,10">
+            <Button Content="Tilføj" Width="100" Margin="5" Background="LightGreen" Click="AddProduct_Click"/>
+            <Button Content="Rediger" Width="100" Margin="5" Background="Khaki" Click="EditProduct_Click"/>
+            <Button Content="Slet" Width="100" Margin="5" Background="LightCoral" Click="DeleteProduct_Click"/>
+        </StackPanel>
+
+        <!-- Stregkodevisning -->
+        <StackPanel Grid.Row="3" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,10,0,0">
+            <TextBlock Text="Stregkode" FontWeight="Bold" Foreground="DarkGreen" Margin="0,0,0,5"/>
+            <Image x:Name="BarcodeImage" Width="250" Height="80" Stretch="Fill" Margin="0,0,0,5"/>
+            <TextBox x:Name="BarcodeTextBox" Width="250" IsReadOnly="True" HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</Window>
