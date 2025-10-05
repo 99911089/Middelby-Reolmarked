@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using Reolmarked.Repository.IRepo;
 using Reolmarked.Repository.DbRepo;
+using Reolmarked.Model;
 
 namespace Reolmarked.ViewModel
 {

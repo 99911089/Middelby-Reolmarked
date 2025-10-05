@@ -1,30 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Media.Imaging;
-using System.IO;
 using Reolmarked.Model;
-using ZXing; // bibliotek til stregkoder
 
 namespace Reolmarked.View
 {
+    /// <summary>
+    /// Vindue til administration af produkter – tilføj, rediger og slet.
+    /// </summary>
     public partial class ProductWindow : Window
     {
-        private List<Product> _products;
+        // Repository giver adgang til produktdata i databasen
+        private readonly ProductRepository _productRepo = new ProductRepository();
 
+        // Liste over produkter, som automatisk opdateres i UI
+        public ObservableCollection<Product> Products { get; set; } = new ObservableCollection<Product>();
         public Tenant SelectedTenant { get; }
 
+        // Konstruktor (standard)
         public ProductWindow()
         {
             InitializeComponent();
 
-            // Eksempeldata
-            _products = new List<Product>
-            {
-                new Product { ProductId = 1, ProductName = "Cola", Price = 15, Barcode = "1234567890" },
-                new Product { ProductId = 2, ProductName = "Chips", Price = 20, Barcode = "9876543210" }
-            };
+            // Binder ObservableCollection til ListView
+            ProductList.ItemsSource = Products;
 
-            UpdateProductDisplay();
+            // Indlæser produkter fra databasen
+            LoadProducts();
         }
 
         public ProductWindow(Tenant selectedTenant)
@@ -32,144 +34,126 @@ namespace Reolmarked.View
             SelectedTenant = selectedTenant;
         }
 
-        // Opdater listen med produkter
-        private void UpdateProductDisplay()
+        // ===================== HENT PRODUKTER =====================
+        private void LoadProducts()
         {
-            ProductListView.ItemsSource = null;
-            ProductListView.ItemsSource = _products;
+            Products.Clear();
+
+            // Henter alle produkter fra databasen
+            foreach (Product p in _productRepo.GetAllProducts())
+            {
+                Products.Add(p);
+            }
         }
 
-        // Tilføj et nyt produkt
+        // ===================== TILFØJ PRODUKT =====================
         private void AddProduct_Click(object sender, RoutedEventArgs e)
         {
-            var inputWindow = new ProductInputWindow();
-            inputWindow.Owner = this;
+            // Inputfelter via simple popup-dialoger
+            string name = Microsoft.VisualBasic.Interaction.InputBox("Produktnavn:", "Tilføj produkt");
+            string priceStr = Microsoft.VisualBasic.Interaction.InputBox("Pris:", "Tilføj produkt");
+            string barcode = Microsoft.VisualBasic.Interaction.InputBox("Stregkode:", "Tilføj produkt");
+            string custStr = Microsoft.VisualBasic.Interaction.InputBox("Kunde ID:", "Tilføj produkt");
 
-            if (inputWindow.ShowDialog() == true)
+            // Tjek at input er gyldigt
+            if (!string.IsNullOrWhiteSpace(name) &&
+                decimal.TryParse(priceStr, out decimal price) &&
+                int.TryParse(custStr, out int customerId))
             {
-                var newProduct = inputWindow.Product;
-                newProduct.ProductId = _products.Count + 1;
+                // Opret nyt produkt
+                Product p = new Product();
+                p.ProductName = name;
+                p.Price = (double)price;
+                p.Barcode = barcode;
+                p.CustomerId = customerId;
 
-                // Hvis der ikke er sat en stregkode, generér en baseret på ID
-                if (string.IsNullOrWhiteSpace(newProduct.Barcode))
-                {
-                    newProduct.Barcode = $"P{newProduct.ProductId:00000}";
-                }
+                // Gem produkt i databasen og få ID tilbage
+                int newId = _productRepo.AddProduct(p);
+                p.ProductId = newId;
 
-                _products.Add(newProduct);
-                UpdateProductDisplay();
+                // Tilføj produktet til den viste liste
+                Products.Add(p);
 
-                // Vis stregkoden i UI
-                ShowBarcode(newProduct);
+                MessageBox.Show("Produkt tilføjet!");
+            }
+            else
+            {
+                MessageBox.Show("Ugyldige værdier. Kontroller at pris og kunde-ID er tal.");
             }
         }
 
-        // Rediger eksisterende produkt
+        // ===================== REDIGER PRODUKT =====================
         private void EditProduct_Click(object sender, RoutedEventArgs e)
         {
-            if (ProductListView.SelectedItem is Product selectedProduct)
+            // Sørg for at et produkt er valgt
+            Product selected = ProductList.SelectedItem as Product;
+            if (selected == null)
             {
-                var inputWindow = new ProductInputWindow(selectedProduct);
-                inputWindow.Owner = this;
+                MessageBox.Show("Vælg et produkt, du vil redigere.");
+                return;
+            }
 
-                if (inputWindow.ShowDialog() == true)
-                {
-                    // Hvis der stadig mangler stregkode → generér automatisk
-                    if (string.IsNullOrWhiteSpace(selectedProduct.Barcode))
-                    {
-                        selectedProduct.Barcode = $"P{selectedProduct.ProductId:00000}";
-                    }
+            // Åbn små inputbokse med eksisterende værdier udfyldt
+            string newName = Microsoft.VisualBasic.Interaction.InputBox("Nyt navn:", "Rediger produkt", selected.ProductName);
+            string newPriceStr = Microsoft.VisualBasic.Interaction.InputBox("Ny pris:", "Rediger produkt", selected.Price.ToString());
+            string newBarcode = Microsoft.VisualBasic.Interaction.InputBox("Ny stregkode:", "Rediger produkt", selected.Barcode);
+            string newCustIdStr = Microsoft.VisualBasic.Interaction.InputBox("Nyt kunde-ID:", "Rediger produkt", selected.CustomerId.ToString());
 
-                    UpdateProductDisplay();
+            // Tjek for gyldige værdier
+            if (decimal.TryParse(newPriceStr, out decimal newPrice) &&
+                int.TryParse(newCustIdStr, out int newCustId))
+            {
+                // Opdater produktet
+                selected.ProductName = newName;
+                selected.Price = (double)newPrice;
+                selected.Barcode = newBarcode;
+                selected.CustomerId = newCustId;
 
-                    // Vis stregkoden i UI
-                    ShowBarcode(selectedProduct);
-                }
+                // Gem ændringer i databasen
+                _productRepo.UpdateProduct(selected);
+
+                // Opdater listen på skærmen
+                ProductList.Items.Refresh();
+
+                MessageBox.Show("Produkt opdateret!");
             }
             else
             {
-                MessageBox.Show("Vælg et produkt først.");
+                MessageBox.Show("Ugyldige værdier. Tjek pris og kunde-ID.");
             }
         }
 
-        // Slet produkt
+        // ===================== SLET PRODUKT =====================
         private void DeleteProduct_Click(object sender, RoutedEventArgs e)
         {
-            if (ProductListView.SelectedItem is Product selectedProduct)
-            {
-                if (MessageBox.Show("Er du sikker på, du vil slette dette produkt?",
-                    "Bekræft", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    _products.Remove(selectedProduct);
-                    UpdateProductDisplay();
+            Product selected = ProductList.SelectedItem as Product;
 
-                    // Ryd stregkode-visning
-                    BarcodeTextBox.Text = "";
-                    BarcodeImage.Source = null;
-                }
-            }
-            else
+            if (selected == null)
             {
-                MessageBox.Show("Vælg et produkt først.");
+                MessageBox.Show("Vælg et produkt, du vil slette.");
+                return;
             }
-        }
 
-        // Når man vælger et produkt i listen
-        private void ProductListView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if (ProductListView.SelectedItem is Product selectedProduct)
+            // Bekræft sletning
+            MessageBoxResult result = MessageBox.Show(
+                "Er du sikker på, at du vil slette produktet '" + selected.ProductName + "'?",
+                "Bekræft sletning",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning
+            );
+
+            if (result == MessageBoxResult.Yes)
             {
-                ShowBarcode(selectedProduct);
+                _productRepo.DeleteProduct(selected.ProductId);
+                Products.Remove(selected);
+                MessageBox.Show("Produkt slettet!");
             }
         }
 
-        // Hjælpefunktion → viser stregkoden for et produkt
-        private void ShowBarcode(Product product)
+        // ===================== LUK VINDUET =====================
+        private void Close_Click(object sender, RoutedEventArgs e)
         {
-            BarcodeTextBox.Text = product.Barcode;
-            BarcodeImage.Source = GenerateBarcode(product.Barcode);
-        }
-
-        
-        // Generér stregkode-billede
-        private BitmapImage GenerateBarcode(string text)
-        {
-            var writer = new BarcodeWriterPixelData
-            {
-                Format = BarcodeFormat.CODE_128, // Standard stregkode
-                Options = new ZXing.Common.EncodingOptions
-                {
-                    Height = 80,
-                    Width = 250,
-                    Margin = 2
-                }
-            };
-
-            var pixelData = writer.Write(text);
-
-            using (var bitmap = new System.Drawing.Bitmap(pixelData.Width, pixelData.Height,
-                System.Drawing.Imaging.PixelFormat.Format32bppRgb))
-            using (var ms = new MemoryStream())
-            {
-                var bitmapData = bitmap.LockBits(
-                    new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                    System.Drawing.Imaging.ImageLockMode.WriteOnly,
-                    bitmap.PixelFormat);
-
-                System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0,
-                    pixelData.Pixels.Length);
-                bitmap.UnlockBits(bitmapData);
-
-                bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-
-                var image = new BitmapImage();
-                ms.Position = 0;
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = ms;
-                image.EndInit();
-                return image;
-            }
+            Close();
         }
     }
 }

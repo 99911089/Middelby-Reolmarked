@@ -1,29 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Reolmarked.Model
 {
-    namespace Reolmarked.Model
+    public class Sale
     {
-        // Repræsenterer et salg med kommission
-        public class Sale
-        {
-            public double SalePrice { get; set; }           // Salgspris
-            public double CommissionPercent { get; set; } = 10; // Kommission i procent
-            public string ProductName { get; internal set; }
-            public int Price { get; internal set; }
-            public string Barcode { get; internal set; }
-            public DateTime SoldDate { get; internal set; }
+        // Unikt ID for hvert salg (primærnøgle i databasen)
+        public int SaleId { get; set; }
 
-            // Beregn kommission
-            public double CalculateCommission()
-            {
-                return SalePrice * (CommissionPercent / 100);
-            }
+        // Navn på produktet, som blev solgt
+        public string ProductName { get; set; }
+
+        // Pris på produktet
+        public int Price { get; set; }
+
+        // Stregkode for produktet
+        public string Barcode { get; set; }
+
+        // Dato for hvornår produktet blev solgt (kan være null)
+        public DateTime? SoldDate { get; set; }
+
+        // Kunde-ID, der ejer/har købt produktet (kan være null)
+        public int? CustomerId { get; set; }
+        public double SalePrice { get; internal set; }
+        public int ProductId { get; internal set; }
+
+        // Metode til at vise et læsevenligt format i fx ListView
+        public override string ToString()
+        {
+            // Hvis der er en dato, brug den – ellers skriv "Ingen dato"
+            string dateText = SoldDate.HasValue ? SoldDate.Value.ToShortDateString() : "Ingen dato";
+
+            // Returnér tekst med dato, navn og pris
+            return $"{dateText} - {ProductName} ({Price} kr.)";
+        }
+
+        internal double CalculateCommission()
+        {
+            throw new NotImplementedException();
         }
     }
-
 }

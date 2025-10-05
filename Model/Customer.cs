@@ -88,6 +88,10 @@ namespace Reolmarked.Model
             }
         }
 
+        public string Email { get; internal set; }
+        public string Address { get; internal set; }
+        public string Phone { get; internal set; }
+
         // ToString bruges til at vise kunden i en ListBox
         public override string ToString()
         {

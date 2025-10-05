@@ -1,41 +1,56 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using Reolmarked.Model;
-using Reolmarked.Repository.IRepo;
 
 namespace Reolmarked.View
 {
     public partial class EditCustomerWindow : Window
     {
-        private readonly ICustomerRepository _repo;
-        private readonly Customer _customer;
+        private Customer _customer; // Den kunde der redigeres
 
-        public EditCustomerWindow(ICustomerRepository repo, Customer customer)
+        // ------------------------------
+        // KONSTRUKTOR
+        // ------------------------------
+        public EditCustomerWindow(Customer existingCustomer)
         {
             InitializeComponent();
-            _repo = repo;
-            _customer = customer;
 
-            // Fyld felterne med kundens nuværende data
+            // Gem referencen til kunden
+            _customer = existingCustomer;
+
+            // Udfyld tekstfelterne med eksisterende data
             NameTextBox.Text = _customer.CustomerName;
-            EmailTextBox.Text = _customer.CustomerEmail;
-            PhoneTextBox.Text = _customer.CustomerPhone;
+            AddressTextBox.Text = _customer.Address;
+            PhoneTextBox.Text = _customer.Phone;
+            EmailTextBox.Text = _customer.Email;
         }
 
+        // ------------------------------
+        // GEM ændringer
+        // ------------------------------
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            // Opdater kunden med nye værdier
-            _customer.CustomerName = NameTextBox.Text;
-            _customer.CustomerEmail = EmailTextBox.Text;
-            _customer.CustomerPhone = PhoneTextBox.Text;
+            // Opdater kundens oplysninger ud fra tekstfelterne
+            _customer.CustomerName = NameTextBox.Text.Trim();
+            _customer.Address = AddressTextBox.Text.Trim();
+            _customer.Phone = PhoneTextBox.Text.Trim();
+            _customer.Email = EmailTextBox.Text.Trim();
 
-            // Gem i databasen
-            _repo.UpdateCustomer(_customer);
+            // Simpelt tjek for tomme felter
+            if (_customer.CustomerName == "")
+            {
+                MessageBox.Show("Kunden skal have et navn.");
+                return;
+            }
 
-            MessageBox.Show("Kunde opdateret!");
+            // Luk vinduet og send 'true' tilbage
             this.DialogResult = true;
             this.Close();
         }
 
+        // ------------------------------
+        // ANNULLER ændringer
+        // ------------------------------
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
