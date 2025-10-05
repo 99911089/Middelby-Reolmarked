@@ -1,33 +1,46 @@
 ﻿using System.Windows;
 using Reolmarked.Model;
-using Reolmarked.Repository.IRepo;
 
 namespace Reolmarked.View
 {
     public partial class AddCustomerWindow : Window
     {
-        private readonly ICustomerRepository _repo;
+        public Customer NewCustomer { get; private set; }
 
-        // Konstruktør tager repository
-        public AddCustomerWindow(ICustomerRepository repo)
+        public AddCustomerWindow()
         {
             InitializeComponent();
-            _repo = repo;
         }
 
-        // Gem-knap
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            Customer customer = new Customer
+            string name = NameTextBox.Text.Trim();
+            string address = AddressTextBox.Text.Trim();
+            string phone = PhoneTextBox.Text.Trim();
+            string email = EmailTextBox.Text.Trim();
+
+            if (name == "")
             {
-                CustomerName = NameTextBox.Text,
-                CustomerEmail = EmailTextBox.Text,
-                CustomerPhone = PhoneTextBox.Text
+                MessageBox.Show("Navn skal udfyldes!");
+                return;
+            }
+
+            NewCustomer = new Customer
+            {
+                CustomerName = name,
+                Address = address,
+                Phone = phone,
+                Email = email
             };
 
-            _repo.CreateCustomer(customer);
-            this.Close();
+            DialogResult = true;
+            Close();
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
         }
     }
 }
-
